@@ -1,0 +1,78 @@
+use BuzzerOneC, BuzzerOneD, BuzzerThree
+
+public switchmodule Timer {
+  in timerButton : Bool,
+     closed : Bool,
+     dt : Int
+  out minute(0) : Int,
+      second(0) : Int,
+      buzzerT : Bool
+  init Stop
+                   
+  state Stop {
+    node waitInput(0) = if timerButton then 
+                          waitInput@last + dt
+                        else 0
+    node endInput(0) = if !timerButton && !end then 
+                         endInput@last + dt
+                       else 0
+    node start = !timerButton && (waitInput@last >= 100) && closed
+    newnode out buzzerT, end = BuzzerOneC <- start, dt
+    out node minute = if end && closed then
+                         if minute@last == 60 then 1 else minute@last + 1
+                      else Retain
+    out node second = if end && closed then 0 
+                      else Retain
+    
+    switch:
+      if endInput >= 1000 && minute != 0 then
+        Run
+      else Retain   
+  }
+  
+  state Run {
+    node waitInput(0) = if timerButton && closed then 
+                          waitInput@last + dt
+                        else 0
+    node startA = !timerButton && (waitInput@last >= 100) && closed
+    newnode buzzerTA, endA = BuzzerOneC <- startA, dt
+    
+    node counter(0) =
+      (counter@last + dt) % 1000
+    
+    node pulse =
+      counter@last > counter
+      
+    node resetInput(0) = if timerButton && closed then
+                           resetInput@last + dt
+                         else 0
+    node startB = !timerButton && (resetInput@last >= 3000) && closed
+    newnode buzzerTB, endB = BuzzerOneD <- startB, dt
+    node startC = minute == 0 && second == 0
+    newnode buzzerTC, endC = BuzzerThree <- startC, dt
+    
+    out node minute = if endB then 0
+                      else if endA && closed && resetInput@last < 3000 then
+                        if minute@last == 60 then 1
+                        else minute@last + 1
+                      else if pulse then
+                        if minute@last == 0 && second@last == 0 then 0
+                        else if second@last == 0 then minute@last - 1
+                        else Retain
+                      else Retain
+                      
+    out node second = if endB then 0
+                      else if endA && closed && resetInput@last < 3000 then 0
+                      else if pulse then
+                        if minute@last == 0 && second@last == 0 then 0
+                        else if second@last == 0 then 59
+                        else second@last - 1
+                      else Retain
+    
+    out node buzzerT = buzzerTA || buzzerTB || buzzerTC
+                               
+    switch: if endB || endC then
+              Stop
+            else Retain          
+  }
+}

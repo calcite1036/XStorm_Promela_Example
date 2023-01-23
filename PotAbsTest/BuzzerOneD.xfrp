@@ -1,0 +1,24 @@
+public switchmodule BuzzerOneD {
+  in start : Bool,
+     dt : Int
+  out buzzer : Bool,
+      end : Bool
+  init Stop
+  
+  state Stop {
+    out node buzzer = False
+    out node end = False
+    
+    switch:
+      if start then Run else Retain
+  }
+
+  state Run {
+    node wait(0) = wait@last + dt
+    out node buzzer = if wait <= 100 then True else False
+    out node end = if wait >= 100 then True else False
+    
+    switch:
+      if wait >= 100 then Stop else Retain
+  }
+}

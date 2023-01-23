@@ -1,0 +1,33 @@
+public switchmodule Cover {
+  in coverSensor : Bool,
+     dt : Int
+  out closed : Bool
+  init Open
+  
+  state Open {
+    out node closed = False
+    node wait(0) = if coverSensor then
+                     wait@last + dt 
+                   else 0
+    abst: if coverSensor then dt else 0
+
+    switch:
+      if coverSensor && wait >= 3000 then
+        Close
+      else Retain
+    abst: if coverSensor && wait >= 1 then Close else Retain
+  }
+  
+  state Close {
+    out node closed = True
+    node wait(0) = if !coverSensor then 
+                     wait@last + dt
+                   else 0
+    abst: if !coverSensor then dt else 0
+    switch:
+      if !coverSensor && wait >= 1000 then
+        Open
+      else Retain
+    abst: if !coverSensor && wait >= 1 then Open else Retain
+  }
+}

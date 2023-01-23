@@ -1,0 +1,122 @@
+use Boil, Boiled, Heater
+
+public switchmodule Pot {
+  in plug : Bool,
+     closed : Bool,
+     water : Int,
+     thermistor : Int,
+     locklamp : Bool,
+     supplyButton : Bool,
+     boilButton : Bool,
+     keeptemp : Int,
+     dt : Int
+  out heater : Bool,
+      battery : Bool,
+      temperature : Int,
+      boillamp : Bool,
+      keeplamp : Bool,
+      supply : Bool,
+      buzzerP : Bool
+  init IdleMode
+
+  const potconst = 1
+  
+  state IdleMode {
+    const idleconst = 1
+
+    out node heater = False
+    out node battery = True
+    out node temperature = 200
+    out node boillamp = False
+    out node keeplamp = False
+    out node supply = False
+    out node buzzerP = False
+  
+    switch:
+      if closed && water != 5 && water != 0 then
+        BoilMode
+      else Retain 
+  }
+  
+  state BoilMode {
+    out node heater = if thermistor < 100 then
+                        True 
+                      else False
+    out node battery = True
+    out node temperature = thermistor
+    out node boillamp = True
+    out node keeplamp = False
+    out node supply = False
+    out node buzzerP = False
+
+    newnode boiled = Boiled <- thermistor, dt
+    
+    switch:
+      if thermistor > 110 then
+        ErrorMode
+      else if !closed || water == 0 || water == 5 then
+        IdleMode
+      else if boiled then
+        KeepMode
+      else Retain
+  }
+  
+  state KeepMode {
+    newnode boil, out buzzerP = Boil <- boilButton, dt
+    node temp = if keeptemp == 1 then 98
+                else if keeptemp == 2 then 90
+                else 60
+     
+    node mcounter(0) =
+           (mcounter@last + dt) % 60000
+    abst: (0) dt
+    node mpulse = mcounter@last > mcounter
+    node mtemp(0) = if mpulse then thermistor else Retain
+    node mdown = mtemp@last > mtemp
+    
+    node errorA(0) = if thermistor > 98 then errorA@last + dt
+                     else 0
+    abst: if thermistor > 98 then dt else 0
+    node errorB = if mdown && temp - thermistor >= 8 then True else False
+    
+    newnode out heater = Heater <- temp, thermistor
+    out node battery = True
+    out node temperature = thermistor
+    out node boillamp = False
+    out node keeplamp = True
+    out node supply = if supplyButton && water != 0 && water != 5 && closed && battery && !locklamp then True else False
+    
+    switch:
+      if thermistor > 110 || errorA >= 180000 || errorB then
+        ErrorMode
+      else if !closed || water == 0 || water == 5 then
+        IdleMode
+      else if boil && !supply then
+        BoilMode
+      else Retain
+    abst: 
+      if thermistor > 110 || errorA >= 1 || errorB then
+        ErrorMode
+      else if !closed || water == 0 || water == 5 then
+        IdleMode
+      else if boil && !supply then
+        BoilMode
+      else Retain
+    
+  }
+  
+  state ErrorMode {
+    node buzzerWait(0) = buzzerWait@last + dt -> delete
+    out node heater = False
+    out node battery = False
+    out node temperature = thermistor
+    out node boillamp = False
+    out node keeplamp = False
+    out node buzzerP = if buzzerWait >= 30000 then False else True
+    abst: True
+    out node supply = False
+    
+    switch:
+      Retain
+  }
+}

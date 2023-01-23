@@ -1,0 +1,10 @@
+public fun incHour(hour : Int, min : Int, sec : Int) =
+  if hour == 1 && min == 1 && sec == 1 then 0 else 
+  if min == 1 && sec == 1 then hour + 1 else hour
+
+public fun incMin(min : Int, sec : Int) =
+  if min == 1 && sec == 1 then 0 else 
+  if sec == 1 then min + 1 else min
+
+public fun incSec(sec : Int) =
+  if sec == 1 then 0 else sec + 1

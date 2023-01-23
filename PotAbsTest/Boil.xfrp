@@ -1,0 +1,20 @@
+use BuzzerOne
+
+public module Boil {
+  in boilButton : Bool,
+     dt : Int
+  out boil : Bool,
+      buzzerP :Bool
+  
+  node tmp = True abst: 1
+
+  node wait(0) = if boilButton then
+                   wait@last + dt
+                 else 0
+  abst: (0) if boilButton then dt else 0
+
+  node start = !boilButton && wait@last >= 100
+  abst: !boilButton && wait@last >= 1
+  
+  newnode out buzzerP, out boil = BuzzerOne <- start, dt
+}

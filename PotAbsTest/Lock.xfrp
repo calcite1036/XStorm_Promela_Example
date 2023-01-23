@@ -1,0 +1,52 @@
+public switchmodule Lock {
+  in lockButton : Bool,
+     closed : Bool,
+     supply : Bool,
+     dt : Int
+  out lock(False) : Bool
+  init Unlocked
+  
+  state Unlocked {
+    out node lock = False
+    node wait(0) = if lockButton then wait@last + dt else 0
+    abst: (0) if lockButton then dt else 0
+    
+    switch:
+      if !closed || supply then
+        Retain
+      else if !lockButton && wait@last >= 100 then
+        Locked
+      else Retain
+    abst:
+      if !closed || supply then
+        Retain
+      else if !lockButton && wait@last >= 1 then
+        Locked
+      else Retain
+  }
+  
+  state Locked {
+    out node lock = True
+    node wait(0) = if lockButton then
+                     wait@last + dt
+                   else 0
+    abst: (0) if lockButton then dt else 0
+
+    switch:
+      if !closed then
+        Unlocked
+      else if supply then
+        Unlocked
+      else if !lockButton && wait@last >= 100 then
+        Unlocked
+      else Retain
+    abst:
+      if !closed then
+        Unlocked
+      else if supply then
+        Unlocked
+      else if !lockButton && wait@last >= 1 then
+        Unlocked
+      else Retain
+  }
+}

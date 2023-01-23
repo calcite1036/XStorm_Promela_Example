@@ -1,0 +1,48 @@
+use Pot, Cover, Lock, Setting, Timer, Water
+
+module Main {
+  in coverSensor : Bool,
+     timerButton : Bool,
+     settingButton : Bool,
+     supplyButton : Bool,
+     boilButton : Bool,
+     lockButton : Bool,
+     fullSensor : Bool,
+     waterSensor1 : Bool,
+     waterSensor2 : Bool,
+     waterSensor3 : Bool,
+     waterSensor4 : Bool,
+     thermistor : Int,
+     dt : Int
+  out heater : Bool,
+      battery : Bool,
+      time : Int,
+      temperature : Int,
+      boillamp : Bool,
+      keeplamp : Bool,
+      locklamp : Bool,
+      mode : Int,
+      buzzer : Bool,
+      water : Int,
+      supply(False) : Bool
+
+  newnode closed = Cover <- coverSensor, dt
+  newnode minute, second, buzzerT = Timer <- timerButton, closed, dt 
+  abst: 0, 0, False
+  newnode keeptemp, buzzerS = Setting <- settingButton, closed, dt
+  newnode out water = Water <- fullSensor, waterSensor1, waterSensor2, waterSensor3, waterSensor4, closed
+  newnode out locklamp = Lock <- lockButton, closed, supply@last, dt
+  newnode out heater, out battery, out temperature, out boillamp, 
+          out keeplamp, sup, buzzerP = 
+          Pot <- True, closed, water, thermistor, locklamp, supplyButton, boilButton, keeptemp, dt
+  out node supply(False) = sup
+  out node time = if second != 0 then minute + 1 else minute 
+  abst: 0
+
+  out node mode = keeptemp 
+  abst: 0
+
+  out node buzzer = buzzerT || buzzerS || buzzerP 
+  abst: True
+
+}

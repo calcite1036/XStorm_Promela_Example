@@ -1,0 +1,14 @@
+public module Heater {
+  in temp : Int,
+     thermistor : Int
+  out heater : Bool
+  
+  node t(0) = thermistor 
+  abst: 0
+  node dt = t - t@last 
+  abst: 0
+  
+  out node heater = if thermistor < temp then
+                      True
+                    else False
+}

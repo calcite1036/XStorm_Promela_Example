@@ -1,0 +1,92 @@
+use Watchlib, StopWatch
+
+public switchmodule Watch {
+  in pressedA : Bool,
+     pressedB : Bool,
+     pressedC : Bool,
+     curHour : Int,
+     curMin : Int,
+     curSec : Int,
+     dt : Int
+  out hour(0) : Int,
+      min(0) : Int,
+      sec(0) : Int,
+      update : Bool,
+      updateh : Int,
+      updatem : Int,
+      updates : Int
+  init DisplayMode
+
+  state DisplayMode {
+    out node hour = curHour
+    out node min = curMin
+    out node sec = curSec
+    out node update = False
+    out node updateh = 0
+    out node updatem = 0
+    out node updates = 0
+
+    switch:
+      if pressedA then
+        SetMode(1)
+      else if pressedC then
+        StopWatchMode
+      else Retain
+  }
+
+  state SetMode(pos : Int) {
+    const dh = case pos of 1 -> 1; _ -> 0;
+    const dm = case pos of 2 -> 1; _ -> 0;
+    const ds = case pos of 3 -> 1; _ -> 0;
+
+    out node hour = if pressedB then (hour@last + dh) % 24 else Retain
+    abst: if pressedA then (hour@last + dh) % 2 else Retain
+
+    out node min = if pressedB then (min@last + dm) % 60 else Retain
+    abst: if pressedA then (min@last + dm) % 2 else Retain
+
+    out node sec = if pressedB then (sec@last + ds) % 60 else Retain
+    abst: if pressedA then (sec@last + ds) % 2 else Retain
+
+    out node update =
+      case pos of
+        3 -> pressedA;
+        _ -> False;
+    
+    out node updateh =
+      case pos of
+        3 -> if pressedA then hour else 0;
+        _ -> 0;
+
+    out node updatem =
+      case pos of
+        3 -> if pressedA then min else 0;
+        _ -> 0;
+
+    out node updates =
+      case pos of
+        3 -> if pressedA then sec else 0;
+        _ -> 0;
+
+    switch:
+      if pressedA then
+        case pos of
+          1 -> SetMode(2);
+          2 -> SetMode(3);
+          3 -> DisplayMode;
+      else Retain
+  }
+
+  state StopWatchMode {
+    newnode out hour, out min, out sec, exit = 
+      StopWatch <- pressedA, pressedB, pressedC, dt
+
+    out node update = False
+    out node updateh = 0
+    out node updatem = 0
+    out node updates = 0
+
+    switch:
+      if exit then DisplayMode else Retain
+  }
+}

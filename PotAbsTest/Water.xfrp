@@ -1,0 +1,17 @@
+public module Water {
+  in fullSensor : Bool,
+     waterSensor1 : Bool,
+     waterSensor2 : Bool,
+     waterSensor3 : Bool,
+     waterSensor4 : Bool,
+     closed : Bool
+  out water : Int
+  
+  out node water =  if !closed then 6
+                    else if fullSensor then 5
+                    else if waterSensor4 then 4
+                    else if waterSensor3 then 3
+                    else if waterSensor2 then 2
+                    else if waterSensor1 then 1
+                    else 0
+}

@@ -1,0 +1,64 @@
+use BuzzerOneB
+
+public switchmodule Setting {
+  in settingButton : Bool,
+     closed : Bool,
+     dt : Int
+  out setting : Int,
+      buzzerS : Bool
+  init HighMode
+  
+  state HighMode {
+    out node setting = 1
+    node wait(0) = if settingButton then
+                     wait@last + dt 
+                   else 0
+    abst: (0) if settingButton then dt else 0
+
+    node start = wait@last >= 100 && !settingButton && closed
+    abst: wait@last >= 1 && !settingButton && closed
+
+    newnode out buzzerS, end = BuzzerOneB <- start, dt 
+    
+    switch:
+      if end && closed then
+        SaveMode
+      else Retain
+  }
+  
+  state SaveMode {
+    out node setting = 2
+    node wait(0) = if settingButton then
+                     wait@last + dt 
+                   else 0
+    abst: (0) if settingButton then dt else 0
+
+    node start = wait@last >= 100 && !settingButton && closed
+    abst: wait@last >= 1 && !settingButton && closed
+
+    newnode out buzzerS, end = BuzzerOneB <- start, dt 
+    
+    switch:
+      if end && closed then
+        MilkMode
+      else Retain
+  }
+  
+  state MilkMode {
+    out node setting = 3
+    node wait(0) = if settingButton then
+                     wait@last + dt 
+                   else 0
+    abst: (0) if settingButton then dt else 0
+
+    node start = wait@last >= 100 && !settingButton && closed
+    abst: wait@last >= 1 && !settingButton && closed
+
+    newnode out buzzerS, end = BuzzerOneB <- start, dt 
+    
+    switch:
+      if end && closed then
+        HighMode
+      else Retain
+  }
+}

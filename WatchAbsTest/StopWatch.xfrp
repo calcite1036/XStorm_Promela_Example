@@ -1,0 +1,49 @@
+use Watchlib
+
+public switchmodule StopWatch {
+  in pressedA : Bool,
+     pressedB : Bool,
+     pressedC : Bool,
+     dt : Int
+  out stopWatchHour(0) : Int,
+      stopWatchMin(0) : Int,
+      stopWatchSec(0) : Int,
+      exit : Bool
+  init Stop
+
+  state Stop {
+    out node stopWatchHour(0) = if pressedA then 0 else Retain
+    out node stopWatchMin(0) = if pressedA then 0 else Retain
+    out node stopWatchSec(0) = if pressedA then 0 else Retain
+
+    out node exit = pressedC
+
+    switch:
+      if pressedB then
+        Run
+      else Retain
+  }
+
+  state Run {
+    node counterSW(0) = (counterSW@last + dt) % 1000 
+    abst: 0
+    node pulseSW = counterSW@last > counterSW
+    abst: dt
+
+    out node stopWatchHour(0) = 
+      if pulseSW then incHour(stopWatchHour@last, stopWatchMin@last, stopWatchSec@last)
+      else Retain
+    out node stopWatchMin(0) =
+      if pulseSW then incMin(stopWatchMin@last, stopWatchSec@last)
+      else Retain
+    out node stopWatchSec(0) =
+      if pulseSW then incSec(stopWatchSec@last)
+      else Retain
+    out node exit = False
+
+    switch:
+      if pressedB then
+        Stop
+      else Retain
+  }
+}

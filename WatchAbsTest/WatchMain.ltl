@@ -1,0 +1,1 @@
+ltl {[](Watch == Watch.StopWatchMode && StopWatch == StopWatch.Stop && Main.pressedC -> Watch@next == Watch.DisplayMode)}

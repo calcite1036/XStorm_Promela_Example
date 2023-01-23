@@ -1,0 +1,1 @@
+ltl {[](Pot == Pot.KeepMode && Main.thermistor > 110 -> <>(Pot == Pot.ErrorMode))}

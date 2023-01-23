@@ -1,0 +1,38 @@
+use Watch,Watchlib
+
+module Main {
+  in pressedA : Bool,
+     pressedB : Bool,
+     pressedC : Bool,
+     elapsed(0) : Int
+  out hour : Int,
+      min : Int, 
+      sec : Int
+
+  node dt = elapsed - elapsed@last
+  abst: elapsed
+
+  newnode out hour, out min, out sec, update, updateh, updatem, updates =
+    Watch <- pressedA, pressedB, pressedC, curHour@last, curMin@last, curSec@last, dt
+
+  node counterCLK(0) = (counterCLK@last + dt) % 1000 
+  abst: 0
+
+  node pulseCLK = counterCLK@last > counterCLK 
+  abst: elapsed
+
+  node curHour(0) = 
+    if update then updateh else
+      if pulseCLK then incHour(curHour@last, curMin@last, curSec@last)
+      else curHour@last
+  
+  node curMin(0) =
+    if update then updatem else
+      if pulseCLK then incMin(curMin@last, curSec@last)
+      else curMin@last
+
+  node curSec(0) =
+    if update then updates else
+      if pulseCLK then incSec(curSec@last)
+      else curSec@last
+}
