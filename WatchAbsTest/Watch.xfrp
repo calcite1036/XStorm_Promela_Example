@@ -40,13 +40,13 @@ public switchmodule Watch {
     const ds = case pos of 3 -> 1; _ -> 0;
 
     out node hour = if pressedB then (hour@last + dh) % 24 else Retain
-    abst: if pressedA then (hour@last + dh) % 2 else Retain
+    abst: if pressedB then (hour@last + dh) % 2 else Retain
 
     out node min = if pressedB then (min@last + dm) % 60 else Retain
-    abst: if pressedA then (min@last + dm) % 2 else Retain
+    abst: if pressedB then (min@last + dm) % 2 else Retain
 
     out node sec = if pressedB then (sec@last + ds) % 60 else Retain
-    abst: if pressedA then (sec@last + ds) % 2 else Retain
+    abst: if pressedB then (sec@last + ds) % 2 else Retain
 
     out node update =
       case pos of
